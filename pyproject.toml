@@ -1,0 +1,19 @@
+[project]
+name = "portfolio-lens"
+version = "0.1.0"
+description = "A Streamlit stock portfolio analyzer powered by yfinance"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+	"pandas>=2.2.0",
+	"plotly>=6.0.0",
+	"streamlit>=1.45.0",
+	"yfinance>=0.2.60",
+]
+
+[project.scripts]
+uvdemo = "uvdemo:main"
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
