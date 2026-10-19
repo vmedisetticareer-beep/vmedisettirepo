@@ -1,0 +1,231 @@
+{
+  "name": "FinanceBench - 3M Document Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -32
+      ],
+      "id": "8aac7633-07c9-4758-b1d8-6ee16ad7333a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/files/3M_2018_10K.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1168,
+        -32
+      ],
+      "id": "8ab86c82-275b-420d-a068-3271cdce9bb5",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -944,
+        -32
+      ],
+      "id": "fedac22f-423d-48d0-bd8b-8303dbde2e71",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "finance-bench-rank",
+          "mode": "list",
+          "cachedResultName": "finance-bench-rank"
+        },
+        "options": {
+          "pineconeNamespace": "fixed-size"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -720,
+        -32
+      ],
+      "id": "f936c1ac-b918-4e80-8dd5-0194216f3a18",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "aftshcy1sR6QBaum",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "Company",
+                "value": "3M"
+              },
+              {
+                "name": "fiscal_year",
+                "value": "2018"
+              },
+              {
+                "name": "document_type",
+                "value": "10-k"
+              },
+              {
+                "name": "source",
+                "value": "3M_2018_10k.pdf"
+              },
+              {
+                "name": "chunking_strategy",
+                "value": "fixed-size"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        176
+      ],
+      "id": "9bd9cab4-9b95-467d-bc43-60b8e1c417fe",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 2000,
+        "chunkOverlap": 300,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        384
+      ],
+      "id": "8d992462-acf3-4ad3-bda9-7ebfe7f53e2a",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        208
+      ],
+      "id": "65c89fa1-fe4b-4374-8868-7d6232eec346",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "SQW3Q5XwACNnwxO9",
+          "name": "OpenAI account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b9acb54e-9e6a-4d90-84ca-77372c511ca6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b7e66cab1034b3ab1a53d722d7177787df1f2ccb76f9581486373369149bfd3a"
+  },
+  "nodeGroups": [],
+  "id": "0oPpbuOKGs6SZ0X0",
+  "tags": []
+}
